@@ -1,9 +1,14 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const _searchTableRegex = (line) => {
+const _searchTableRegex = (line, tableName) => {
     var currentTable;
-    const tableNameRegex = /^\d*\s*ETW000\s*table\s*description\s*(.{30})/gi;
+    if(!tableName){
+        tableName = '.{30}';
+    }else{
+        tableName = tableName.toUpperCase();
+    }
+    const tableNameRegex = new RegExp(`^\\d*\\s*ETW000\\s*table\\s*description\\s*(${tableName})`, 'gi');
     const tableNameMatch = tableNameRegex.exec(line);
     if(tableNameMatch !== null){
         currentTable = tableNameMatch[1].trim();
@@ -11,8 +16,13 @@ const _searchTableRegex = (line) => {
     return currentTable;
 }
 
-module.exports = (logFilePath) => {
+module.exports = (args) => {
     return new Promise((res, rej) => {
+        const logFilePath = args.logFilePath;
+        const tableName = args.tableName;
+        if(!logFilePath){
+            rej('Missing log file path');
+        }
         const fileStream = fs.createReadStream(logFilePath);
         var tables = {};
         const rl = readline.createInterface({
@@ -24,7 +34,7 @@ module.exports = (logFilePath) => {
         var currentTable;
         rl.on('line', (line) => {
             if(!currentTable){
-                currentTable = _searchTableRegex(line);
+                currentTable = _searchTableRegex(line, tableName);
             }else{
                 const tableDescriptorRegex = /^\d*\s*ETW000\s*\*\*\s*38\s*\*\*\s{1}(X|\s{1})(\w{1})(\d*)(.{30})/gi;
                 const tableDescriptorMatch = tableDescriptorRegex.exec(line);

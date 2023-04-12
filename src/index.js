@@ -1,18 +1,15 @@
 const fs = require('fs');
-const { l } = require('./commands/l');
-const { deleteLog } = require('./log/deleteLog');
-
-const _getDataFilePath = () => {
-    if(this._dataFilePath){
-        return this._dataFilePath;
-    }else{
-        
-    }
-}
+const { l } = require('./commands');
+const { deleteLog } = require('./log');
+const { getTableStructure, getTableEntries } = require('./table');
+const { getDataFile } = require('./utils');
 
 module.exports = class R3Trans {
 
     constructor(arg1, arg2) {
+        if (!arg2) {
+            arg2 = {};
+        }
         if (typeof (arg2) === 'object') {
             this._r3transHome = arg2.r3transHome || process.env.R3TRANS_HOME;
             if (!this._r3transHome) {
@@ -26,7 +23,7 @@ module.exports = class R3Trans {
                 } catch (err) {
                     throw new Error(`R3TRANS_HOME path doesn't have write access.`);
                 }
-            }else{
+            } else {
                 try {
                     fs.accessSync(this._tmpFolderPath, fs.constants.W_OK);
                 } catch (err) {
@@ -48,7 +45,29 @@ module.exports = class R3Trans {
     }
 
     async isValid() {
-        return true;
+        var valid;
+        const logFilePath = this._tmpFolderPath;
+        const dataFile = getDataFile(this._dataFilePath, this._tmpFolderPath, this._dataFileBuffer);
+        const dataFilePath = dataFile.getPath();
+        var commandResult;
+        try {
+            commandResult = await l({
+                dataFilePath,
+                logFilePath
+            });
+            valid = true;
+        } catch (e) {
+            valid = false;
+            commandResult = {
+                logFilePath: e.logFilePath
+            }
+        } finally {
+            if(commandResult){
+                deleteLog(commandResult.logFilePath);
+            }
+            dataFile.dispose();
+        }
+        return valid;
     }
 
     async getTableEntries(tableName) {
@@ -57,12 +76,39 @@ module.exports = class R3Trans {
                 throw new Error(`Table "${tableName}" not found.`);
             }
             tableName = tableName.trim().toUpperCase();
-        } else {
-
         }
+        const logFilePath = this._tmpFolderPath;
+        const dataFile = getDataFile(this._dataFilePath, this._tmpFolderPath, this._dataFileBuffer);
+        const dataFilePath = dataFile.getPath();
         const commandResult = await l({
-
+            dataFilePath,
+            logFilePath,
+            logLevel: 2
         });
-        deleteLog(commandResult.logFilePath);
+        var tableEntries;
+        try {
+            const tables = await getTableStructure({
+                logFilePath: commandResult.logFilePath,
+                tableName
+            });
+            tableEntries = await getTableEntries({
+                logFilePath: commandResult.logFilePath,
+                tables
+            });
+        } catch (e) {
+            if(e.error){
+                throw e.error;
+            }else{
+                throw e;
+            }
+        } finally {
+            deleteLog(commandResult.logFilePath);
+            dataFile.dispose();
+        }
+        if (tableName) {
+            return tableEntries[tableName] || [];
+        } else {
+            return tableEntries;
+        }
     }
 }

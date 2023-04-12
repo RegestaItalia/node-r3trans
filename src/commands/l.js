@@ -3,9 +3,9 @@ const exec = promisify(require('child_process').exec);
 
 module.exports = async (args) => {
     var cwd;
-    if(args.r3transPath){
+    if (args.r3transPath) {
         cwd = args.r3transPath;
-    }else{
+    } else {
         cwd = process.env.R3TRANS_HOME;
     }
     if (!cwd) {
@@ -14,15 +14,21 @@ module.exports = async (args) => {
     const logFileName = `${Date.now()}.log`;
     const logFilePath = `${args.tmpFolderPath || cwd}\\${logFileName}`;
     var logLevel;
-    if(args.logLevel){
+    if (args.logLevel) {
         logLevel = `-v ${args.logLevel}`;
-    }else{
+    } else {
         logLevel = '';
     }
-    await exec(`R3Trans -l ${args.dataFilePath} -w ${logFilePath} ${logLevel}`, {
-        cwd
-    });
-
+    try {
+        await exec(`R3Trans -l ${args.dataFilePath} -w ${logFilePath} ${logLevel}`, {
+            cwd
+        });
+    } catch (error) {
+        throw {
+            error,
+            logFilePath
+        }
+    }
     return {
         logFilePath
     }
