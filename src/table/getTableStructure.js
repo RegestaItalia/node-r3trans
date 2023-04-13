@@ -36,15 +36,17 @@ module.exports = (args) => {
             if(!currentTable){
                 currentTable = _searchTableRegex(line, tableName);
             }else{
-                const tableDescriptorRegex = /^\d*\s*ETW000\s*\*\*\s*38\s*\*\*\s{1}(X|\s{1})(\w{1})(\d*)(.{30})/gi;
-                const tableDescriptorMatch = tableDescriptorRegex.exec(line);
-                if(tableDescriptorMatch !== null){
-                    if(!tables[currentTable]){
-                        tables[currentTable] = new Map();
+                if(!line.includes('comment')){ //skip comments -> SG they might have column order
+                    const tableDescriptorRegex = /^\d*\s*ETW000\s*\*\*\s*38\s*\*\*\s{1}(X|\s{1})(\w{1})(\d*)(.{30})/gi;
+                    const tableDescriptorMatch = tableDescriptorRegex.exec(line);
+                    if(tableDescriptorMatch !== null){
+                        if(!tables[currentTable]){
+                            tables[currentTable] = new Map();
+                        }
+                        tables[currentTable].set(tableDescriptorMatch[4].trim(), parseInt(tableDescriptorMatch[3])/2);
+                    }else{
+                        currentTable = _searchTableRegex(line);
                     }
-                    tables[currentTable].set(tableDescriptorMatch[4].trim(), parseInt(tableDescriptorMatch[3])/2);
-                }else{
-                    currentTable = _searchTableRegex(line);
                 }
             }
         });
