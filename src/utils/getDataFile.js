@@ -6,8 +6,7 @@ module.exports = (dataFilePath, tmpFolderPath, dataFileBuffer) => {
         path = dataFilePath;
     }else{
         const filePath = `${tmpFolderPath}/${Date.now()}`;
-        const input = fs.createWriteStream(filePath, 'binary');
-        dataFileBuffer.pipe(input);
+        fs.writeFileSync(filePath, dataFileBuffer);
         path = filePath;
     }
     return {
