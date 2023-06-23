@@ -1,5 +1,6 @@
 const { promisify } = require('util');
 const exec = promisify(require('child_process').exec);
+const path = require('path');
 
 module.exports = async (args) => {
     var cwd;
@@ -12,7 +13,7 @@ module.exports = async (args) => {
         throw new Error('Missing R3TRANS_HOME');
     }
     const logFileName = `${Date.now()}.log`;
-    const logFilePath = `${args.tmpFolderPath || cwd}\\${logFileName}`;
+    const logFilePath = path.join(args.tmpFolderPath || cwd, logFileName);
     var logLevel;
     if (args.logLevel) {
         logLevel = `-v ${args.logLevel}`;

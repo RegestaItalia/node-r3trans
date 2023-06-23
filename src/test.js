@@ -14,7 +14,7 @@ const main = async() => {
 }
 
 main().then(() => {
-    debugger
+    //debugger
 }).catch(e => {
-    debugger
-})
+    //debugger
+});
