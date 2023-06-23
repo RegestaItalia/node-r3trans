@@ -6,7 +6,7 @@ module.exports = (dataFilePath, tmpFolderPath, dataFileBuffer) => {
     if(dataFilePath){
         filePath = dataFilePath;
     }else{
-        filePath = path.join(tmpFolderPath, Date.now());
+        filePath = path.join(tmpFolderPath, Date.now().toString());
         fs.writeFileSync(filePath, dataFileBuffer);
     }
     return {
