@@ -15,18 +15,18 @@ npm install node-r3trans
 Start by importing the library and instantiating an object.
 If your transport is in a folder, you can pass the path as a string, like this:
 ```javascript
-const R3Trans = require('./index');
+const R3Trans = require('node-r3trans');
 const transport = new R3Trans('C:\\R3Trans\\R904009.RST');
 ```
 If your transport is a buffer:
 ```javascript
-const R3Trans = require('./index');
+const R3Trans = require('node-r3trans');
 const trBuffer = fs.readFileSync('C:\\R3Trans\\R904009.RST');
 const transport = new R3Trans(trBuffer);
 ```
 Optionally, you can also pass an object containing these values:
 ```javascript
-const R3Trans = require('./index');
+const R3Trans = require('node-r3trans');
 const transport = new R3Trans('C:\\R3Trans\\R904009.RST', {
     r3transHome: 'C:\\R3Trans' //Folder where R3Trans is placed, defaults to enviroment variable R3TRANS_HOME
     tmpFolderPath: 'C:\\R3Trans' //Folder where all temporary files are generated before being deleted, defaults to r3trans home. must have write access
@@ -35,7 +35,7 @@ const transport = new R3Trans('C:\\R3Trans\\R904009.RST', {
 ## Examples
 ### Validate transport request
 ```javascript
-const R3Trans = require('./index');
+const R3Trans = require('node-r3trans');
 const transport = new R3Trans('C:\\R3Trans\\R904009.RST');
 transport.isValid().then(valid => {
     if(valid){
@@ -49,7 +49,7 @@ transport.isValid().then(valid => {
 ```
 ### List objects of a transport request
 ```javascript
-const R3Trans = require('./index');
+const R3Trans = require('node-r3trans');
 const transport = new R3Trans('C:\\R3Trans\\R904009.RST');
 transport.getTableEntries('TADIR').then(objects => {
     console.log(JSON.stringify(objects.map(o => `${o.R3TR} ${o.OBJECT} ${o.OBJ_NAME}`)));
@@ -59,7 +59,7 @@ transport.getTableEntries('TADIR').then(objects => {
 ```
 ### List all table entries of a transport request
 ```javascript
-const R3Trans = require('./index');
+const R3Trans = require('node-r3trans');
 const transport = new R3Trans('C:\\R3Trans\\R904009.RST');
 transport.getTableEntries().then(objects => {
     console.log(JSON.stringify(objects.map(o => `${o.R3TR} ${o.OBJECT} ${o.OBJ_NAME}`)));

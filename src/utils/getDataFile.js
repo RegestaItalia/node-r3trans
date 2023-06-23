@@ -1,22 +1,21 @@
 const fs = require('fs');
+const path = require('path');
 
 module.exports = (dataFilePath, tmpFolderPath, dataFileBuffer) => {
-    var path;
+    var filePath;
     if(dataFilePath){
-        path = dataFilePath;
+        filePath = dataFilePath;
     }else{
-        const filePath = `${tmpFolderPath}/${Date.now()}`;
-        const input = fs.createWriteStream(filePath, 'binary');
-        dataFileBuffer.pipe(input);
-        path = filePath;
+        filePath = path.join(tmpFolderPath, Date.now());
+        fs.writeFileSync(filePath, dataFileBuffer);
     }
     return {
         getPath: () => {
-            return path;
+            return filePath;
         },
         dispose: () => {
             if(!dataFilePath){
-                fs.unlinkSync(path);
+                fs.unlinkSync(filePath);
             }
         }
     }
