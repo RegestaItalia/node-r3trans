@@ -66,16 +66,22 @@ const _getTableRow = (line, tableName, tablesDescriptor) => {
 
 module.exports = (args) => {
     return new Promise((res, rej) => {
-        const logFilePath = args.logFilePath;
         const tables = args.tables;
-        if(!logFilePath){
-            rej('Missing log file path');
-        }
         if(!tables){
             rej('Missing table structure');
         }
 
-        const fileStream = fs.createReadStream(logFilePath);
+        var fileStream;
+        if(args.fileStream){
+            fileStream = args.fileStream;
+        }else{
+            const logFilePath = args.logFilePath;
+            if(!logFilePath){
+                rej('Missing log file path');
+            }
+            fileStream = fs.createReadStream(logFilePath);
+        }
+
         var returnObject = {};
         const rl = readline.createInterface({
             input: fileStream,

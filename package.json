@@ -1,6 +1,6 @@
 {
   "name": "node-r3trans",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Node.js wrapper for R3Trans",
   "keywords": [
     "sap",

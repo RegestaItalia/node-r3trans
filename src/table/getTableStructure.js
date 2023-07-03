@@ -18,18 +18,24 @@ const _searchTableRegex = (line, tableName) => {
 
 module.exports = (args) => {
     return new Promise((res, rej) => {
-        const logFilePath = args.logFilePath;
         const tableName = args.tableName;
-        if(!logFilePath){
-            rej('Missing log file path');
+        
+        var fileStream;
+        if(args.fileStream){
+            fileStream = args.fileStream;
+        }else{
+            const logFilePath = args.logFilePath;
+            if(!logFilePath){
+                rej('Missing log file path');
+            }
+            fileStream = fs.createReadStream(logFilePath);
         }
-        const fileStream = fs.createReadStream(logFilePath);
+
         var tables = {};
         const rl = readline.createInterface({
             input: fileStream,
             crlfDelay: Infinity
         });
-
 
         var currentTable;
         rl.on('line', (line) => {

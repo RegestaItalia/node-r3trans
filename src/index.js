@@ -70,6 +70,35 @@ module.exports = class R3Trans {
         return valid;
     }
 
+    async getLogBuffer() {
+        var buffer;
+        const logFilePath = this._tmpFolderPath;
+        const dataFile = getDataFile(this._dataFilePath, this._tmpFolderPath, this._dataFileBuffer);
+        const dataFilePath = dataFile.getPath();
+        var commandResult;
+        try {
+            commandResult = await l({
+                dataFilePath,
+                logFilePath,
+                logLevel: 2
+            });
+        } catch (e) {
+            commandResult = {
+                logFilePath: e.logFilePath
+            }
+        } finally {
+            if(commandResult){
+                buffer = fs.readFileSync(commandResult.logFilePath);
+                deleteLog(commandResult.logFilePath);
+            }
+            dataFile.dispose();
+        }
+        if(!buffer){
+            throw new Error('Log file was not created.');
+        }
+        return buffer;
+    }
+
     async getTableEntries(tableName) {
         if (tableName) {
             if (typeof (tableName) !== 'string') {
