@@ -279,18 +279,23 @@ export class R3transLogParser {
             case 0:
                 sExitCode = 'No errors or problems have occurred.';
                 sType = 'SUCCESS';
+                break;
             case 4:
                 sExitCode = 'Warnings have occurred but they can be ignored.';
                 sType = 'WARNING';
+                break;
             case 8:
                 sExitCode = 'Transport could not be completed. Problems occurred with certain objects.';
                 sType = 'ERROR';
+                break;
             case 12:
                 sExitCode = 'Fatal errors have occurred, such as errors while reading or writing a file or unexpected errors within the database interface, in particular database problems.';
                 sType = 'ERROR';
+                break;
             case 16:
                 sExitCode = 'Situations have occurred that are normally not allowed.';
                 sType = 'ERROR';
+                break;
         }
         return {
             type: sType,
