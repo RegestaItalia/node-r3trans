@@ -1,7 +1,6 @@
 # node-r3trans
 ![npm](https://img.shields.io/npm/l/node-r3trans)
 ![npm](https://img.shields.io/npm/v/node-r3trans)
-![npm](https://img.shields.io/npm/v/node-r3trans)
 
 NodeJs wrapper for [SAP R3trans](https://help.sap.com/docs/SOFTWARE_LOGISTICS_TOOLSET_CTS_PLUG-IN/05c12df5b54849c49940a14bc089d8b4/3dad5c974ebc11d182bf0000e829fbfe.html?locale=en-US).
 
