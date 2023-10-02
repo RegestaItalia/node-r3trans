@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as readline from "readline";
 import { Structure } from "./Structure";
+import { ReleaseLogStep } from "./ReleaseLogStep";
 
 export class R3transLogParser {
     private _tablesStructure: any;
@@ -10,9 +11,9 @@ export class R3transLogParser {
 
     private _getStream(): fs.ReadStream {
         //if (typeof (this._log) === 'string') {
-            return fs.createReadStream(this._log);
+        return fs.createReadStream(this._log);
         //} else {
-            //return this._log;
+        //return this._log;
         //}
     }
 
@@ -61,7 +62,7 @@ export class R3transLogParser {
     private _getTableRow(line: string, tableName: string): any {
         var record = {};
         const tableDescriptor = this._tablesStructure[tableName];
-        if(!tableDescriptor){
+        if (!tableDescriptor) {
             return;
         }
         const tableRowRegex = this._getTableRowRegex(tableName);
@@ -189,17 +190,111 @@ export class R3transLogParser {
     }
 
     public async getTableEntries(tableName?: string) {
-        if(!this._tableEntries){
+        if (!this._tableEntries) {
             this._tableEntries = await this._getTableEntries();
         }
-        if(tableName){
-            if(this._tableEntries[tableName]){
+        if (tableName) {
+            if (this._tableEntries[tableName]) {
                 return this._tableEntries[tableName];
-            }else{
+            } else {
                 return [];
             }
-        }else{
+        } else {
             return this._tableEntries;
+        }
+    }
+
+    public async getReleaseLog(): Promise<ReleaseLogStep[]> {
+        return await new Promise((res, rej) => {
+            var returnObject = [];
+            var stepBreaker = false;
+            var currentStep: ReleaseLogStep;
+            const stream = this._getStream();
+            const rl = readline.createInterface({
+                input: stream,
+                crlfDelay: Infinity
+            });
+            rl.on('line', (line) => {
+                if (stepBreaker) {
+                    const stepMatch = /^\d{1}\s*(ETP\d{3})\s*(.*)/gi.exec(line);
+                    if (stepMatch) {
+                        currentStep = {
+                            id: stepMatch[1],
+                            name: stepMatch[2],
+                            endDateTime: null,
+                            exitCode: null,
+                            log: null
+                        };
+                    }
+                }
+                if (/^\d{1}\s*ETP199X/gi.test(line)) {
+                    stepBreaker = true;
+                } else {
+                    stepBreaker = false;
+                    if (/^\d{1}\s*ETP199/gi.test(line)) {
+                        if (currentStep) {
+                            returnObject.push(currentStep);
+                        }
+                    } else {
+                        if (currentStep) {
+                            const logMatch = /^\d{1}\s*\w{3}\d{3}\s(.*)/gi.exec(line);
+                            if (logMatch) {
+                                var aLog = [];
+                                if(currentStep.log){
+                                    aLog.push(currentStep.log);
+                                }
+                                aLog.push(logMatch[1])
+                                currentStep.log = aLog.join('\n');
+                            }
+                            if (/^\d{1}\s*ETP110/gi.test(line)) {
+                                const dateTimeMatch = /^\d{1}\sETP110\s*.*:\s*"(\d*)"/gi.exec(line);
+                                if (dateTimeMatch) {
+                                    currentStep.endDateTime = parseInt(dateTimeMatch[1]);
+                                }
+                            }
+                            if (/^\d{1}\s*ETP111/gi.test(line)) {
+                                const exitCodeMatch = /^\d{1}\sETP111\s*.*:\s*"(\d*)"/gi.exec(line);
+                                if (exitCodeMatch) {
+                                    currentStep.exitCode = parseInt(exitCodeMatch[1]);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            rl.on('close', () => {
+                res(returnObject);
+            });
+        });
+    }
+
+    public static parseExitCode(exitCode: 0 | 4 | 8 | 12 | 16): {
+        type: 'SUCCESS' | 'ERROR' | 'WARNING',
+        value: string
+    } {
+        var sType: any = `ERROR`;
+        var sExitCode = `Return code not set by R3trans itself but point to errors, such as segmentation faults.`;
+        switch(exitCode){
+            case 0:
+                sExitCode = 'No errors or problems have occurred.';
+                sType = 'SUCCESS';
+            case 4:
+                sExitCode = 'Warnings have occurred but they can be ignored.';
+                sType = 'WARNING';
+            case 8:
+                sExitCode = 'Transport could not be completed. Problems occurred with certain objects.';
+                sType = 'ERROR';
+            case 12:
+                sExitCode = 'Fatal errors have occurred, such as errors while reading or writing a file or unexpected errors within the database interface, in particular database problems.';
+                sType = 'ERROR';
+            case 16:
+                sExitCode = 'Situations have occurred that are normally not allowed.';
+                sType = 'ERROR';
+        }
+        return {
+            type: sType,
+            value: sExitCode
         }
     }
 
