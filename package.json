@@ -1,6 +1,6 @@
 {
   "name": "node-r3trans",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "NodeJs wrapper for SAP R3trans program",
   "keywords": [
     "sap",

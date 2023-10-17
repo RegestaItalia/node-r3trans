@@ -240,7 +240,7 @@ export class R3transLogParser {
                             const logMatch = /^\d{1}\s*\w{3}\d{3}\s(.*)/gi.exec(line);
                             if (logMatch) {
                                 var aLog = [];
-                                if(currentStep.log){
+                                if (currentStep.log) {
                                     aLog.push(currentStep.log);
                                 }
                                 aLog.push(logMatch[1])
@@ -269,33 +269,38 @@ export class R3transLogParser {
         });
     }
 
-    public static parseExitCode(exitCode: 0 | 4 | 8 | 12 | 16): {
-        type: 'SUCCESS' | 'ERROR' | 'WARNING',
+    public static parseExitCode(exitCode?: number): {
+        type: 'SUCCESS' | 'ERROR' | 'WARNING' | 'UNKNOWN',
         value: string
     } {
         var sType: any = `ERROR`;
         var sExitCode = `Return code not set by R3trans itself but point to errors, such as segmentation faults.`;
-        switch(exitCode){
-            case 0:
-                sExitCode = 'No errors or problems have occurred.';
-                sType = 'SUCCESS';
-                break;
-            case 4:
-                sExitCode = 'Warnings have occurred but they can be ignored.';
-                sType = 'WARNING';
-                break;
-            case 8:
-                sExitCode = 'Transport could not be completed. Problems occurred with certain objects.';
-                sType = 'ERROR';
-                break;
-            case 12:
-                sExitCode = 'Fatal errors have occurred, such as errors while reading or writing a file or unexpected errors within the database interface, in particular database problems.';
-                sType = 'ERROR';
-                break;
-            case 16:
-                sExitCode = 'Situations have occurred that are normally not allowed.';
-                sType = 'ERROR';
-                break;
+        if (!exitCode) {
+            sType = `UNKNOWN`;
+            sExitCode = `Unknown exit code.`;
+        } else {
+            switch (exitCode) {
+                case 0:
+                    sExitCode = 'No errors or problems have occurred.';
+                    sType = 'SUCCESS';
+                    break;
+                case 4:
+                    sExitCode = 'Warnings have occurred but they can be ignored.';
+                    sType = 'WARNING';
+                    break;
+                case 8:
+                    sExitCode = 'Transport could not be completed. Problems occurred with certain objects.';
+                    sType = 'ERROR';
+                    break;
+                case 12:
+                    sExitCode = 'Fatal errors have occurred, such as errors while reading or writing a file or unexpected errors within the database interface, in particular database problems.';
+                    sType = 'ERROR';
+                    break;
+                case 16:
+                    sExitCode = 'Situations have occurred that are normally not allowed.';
+                    sType = 'ERROR';
+                    break;
+            }
         }
         return {
             type: sType,
