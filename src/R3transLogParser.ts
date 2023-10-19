@@ -275,7 +275,7 @@ export class R3transLogParser {
     } {
         var sType: any = `ERROR`;
         var sExitCode = `Return code not set by R3trans itself but point to errors, such as segmentation faults.`;
-        if (!exitCode) {
+        if (!exitCode && exitCode !== 0) {
             sType = `UNKNOWN`;
             sExitCode = `Unknown exit code.`;
         } else {
