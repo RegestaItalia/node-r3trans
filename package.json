@@ -1,6 +1,6 @@
 {
   "name": "node-r3trans",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "NodeJs wrapper for SAP R3trans program",
   "keywords": [
     "sap",
@@ -20,9 +20,10 @@
     "url": "git+https://github.com/RegestaItalia/node-r3trans.git"
   },
   "scripts": {
-    "build": "tsc",
+    "copy_preinstall": "copy _preinstall.js dist\\_preinstall.js",
+    "build": "tsc && npm run copy_preinstall",
     "prepublishOnly": "npm run build",
-    "preinstall": "node preinstall.js"
+    "preinstall": "node _preinstall.js"
   },
   "author": {
     "name": "Simone Gaffurini",
