@@ -57,15 +57,19 @@ export class R3trans {
             exec(`R3trans ${args || ''}`, {
                 cwd: this.r3transDirPath
             }, (error, stdout, stderr) => {
+                const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
                 if (args) {
                     if (error && errorCodes.includes(error.code)) {
+                        if(logFile){
+                            logFile.dispose();
+                        }
                         rej(error)
                     }
                 }
                 res({
                     code: error ? error.code : 0,
                     output: stdout,
-                    logFile: logFilePath ? new R3transFile(logFilePath, true) : null
+                    logFile
                 });
             });
         });
