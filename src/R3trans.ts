@@ -11,6 +11,7 @@ export class R3trans {
     public r3transDirPath: string;
     public tempDirPath: string;
     private _version: string;
+    private _unicode: boolean;
 
     constructor(options?: R3transOptions) {
         if (options) {
@@ -97,6 +98,21 @@ export class R3trans {
         return this._version;
     }
 
+    public async isUnicode(): Promise<boolean> {
+        if (!this._unicode) {
+            const oExec = await this._exec();
+            if (oExec.code === 12) {
+                try {
+                    const outputLine = oExec.output.split(/\r?\n|\r|\n/g)[2];
+                    this._unicode = !outputLine.startsWith('non-unicode');
+                } catch (e) {
+                    //
+                }
+            }
+        }
+        return this._unicode;
+    }
+
     public async isTransportValid(data: string | Buffer): Promise<boolean> {
         var valid: boolean = false;
         const transport = this._getTransportFile(data);
@@ -132,7 +148,7 @@ export class R3trans {
         const transport = this._getTransportFile(data);
         try {
             const oExec = await this._exec(`-l ${transport.filePath}`, true, 4);
-            const parser = new R3transLogParser(oExec.logFile.filePath);
+            const parser = new R3transLogParser(oExec.logFile.filePath, await this.isUnicode());
             tableStructure = await parser.getTableStructure(tableName);
             oExec.logFile.dispose();
         } catch (e) {
@@ -148,7 +164,7 @@ export class R3trans {
         const transport = this._getTransportFile(data);
         try {
             const oExec = await this._exec(`-l ${transport.filePath}`, true, 4);
-            const parser = new R3transLogParser(oExec.logFile.filePath);
+            const parser = new R3transLogParser(oExec.logFile.filePath, await this.isUnicode());
             tableEntries = await parser.getTableEntries(tableName);
             oExec.logFile.dispose();
         } catch (e) {
