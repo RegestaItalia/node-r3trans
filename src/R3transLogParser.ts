@@ -7,7 +7,7 @@ export class R3transLogParser {
     private _tablesStructure: any;
     private _tableEntries: any;
 
-    constructor(private _log: string) { }
+    constructor(private _log: string, private _unicode: boolean) { }
 
     private _getStream(): fs.ReadStream {
         //if (typeof (this._log) === 'string') {
@@ -67,6 +67,9 @@ export class R3transLogParser {
         }
         const tableRowRegex = this._getTableRowRegex(tableName);
         var sTableRow = line.replace(tableRowRegex, '');
+        if(!this._unicode){
+            sTableRow = sTableRow.split('').filter((_, index) => index % 2 === 0).join('');
+        }
         for (const field of tableDescriptor.keys()) {
             const fieldLength = tableDescriptor.get(field);
             try {
