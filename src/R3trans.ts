@@ -103,7 +103,7 @@ export class R3trans {
             const oExec = await this._exec();
             if (oExec.code === 12) {
                 try {
-                    const outputLine = oExec.output.split(/\r?\n|\r|\n/g)[2];
+                    const outputLine = oExec.output.split(/\r?\n|\r|\n/g)[1];
                     this._unicode = !outputLine.startsWith('non-unicode');
                 } catch (e) {
                     //
