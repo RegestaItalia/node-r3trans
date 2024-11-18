@@ -67,7 +67,7 @@ export class R3transLogParser {
         }
         const tableRowRegex = this._getTableRowRegex(tableName);
         var sTableRow = line.replace(tableRowRegex, '');
-        if(!this._unicode){
+        if(!this._unicode && tableName !== 'TADIR'){
             sTableRow = sTableRow.split('').filter((_, index) => index % 2 === 0).join('');
         }
         for (const field of tableDescriptor.keys()) {
