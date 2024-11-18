@@ -7,7 +7,7 @@ export class R3transLogParser {
     private _tablesStructure: any;
     private _tableEntries: any;
 
-    constructor(private _log: string, private _unicode: boolean) { }
+    constructor(private _log: string, private _unicode: boolean = false) { }
 
     private _getStream(): fs.ReadStream {
         //if (typeof (this._log) === 'string') {
