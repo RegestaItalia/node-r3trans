@@ -1,10 +1,6 @@
 {
   "name": "node-r3trans",
-<<<<<<< Updated upstream
-  "version": "1.4.2",
-=======
   "version": "1.4.4",
->>>>>>> Stashed changes
   "description": "NodeJs wrapper for SAP R3trans program",
   "keywords": [
     "sap",
