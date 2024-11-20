@@ -61,7 +61,7 @@ export class R3trans {
                 const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
                 if (args) {
                     if (error && errorCodes.includes(error.code)) {
-                        if(logFile){
+                        if (logFile) {
                             logFile.dispose();
                         }
                         rej(error)
@@ -88,29 +88,37 @@ export class R3trans {
         if (!this._version) {
             const oExec = await this._exec();
             if (oExec.code === 12) {
-                try {
-                    this._version = oExec.output.split(/\r?\n|\r|\n/g)[0];
-                } catch (e) {
-                    //
-                }
+                this._version = R3trans.getVersion(oExec.output);
             }
         }
         return this._version;
+    }
+
+    public static getVersion(log: string): string {
+        try {
+            return log.split(/\r?\n|\r|\n/g)[0];
+        } catch (e) {
+            return undefined;
+        }
     }
 
     public async isUnicode(): Promise<boolean> {
         if (!this._unicode) {
             const oExec = await this._exec();
             if (oExec.code === 12) {
-                try {
-                    const outputLine = oExec.output.split(/\r?\n|\r|\n/g)[1];
-                    this._unicode = !outputLine.startsWith('non-unicode');
-                } catch (e) {
-                    //
-                }
+                this._unicode = R3trans.isUnicode(oExec.output);
             }
         }
         return this._unicode;
+    }
+
+    public static isUnicode(log: string): boolean {
+        try {
+            const outputLine = log.split(/\r?\n|\r|\n/g)[1];
+            return !outputLine.startsWith('non-unicode');
+        } catch (e) {
+            return undefined;
+        }
     }
 
     public async isTransportValid(data: string | Buffer): Promise<boolean> {
@@ -177,9 +185,9 @@ export class R3trans {
 
     public async getTransportTrkorr(data: string | Buffer): Promise<string> {
         const e070 = await this.getTableEntries(data, 'E070');
-        if(e070.length === 1){
+        if (e070.length === 1) {
             return e070[0].TRKORR;
-        }else{
+        } else {
             throw new Error('Trkorr not found.');
         }
     }
