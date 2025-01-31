@@ -24,18 +24,12 @@ export class R3trans {
             throw new Error(`R3TRANS_HOME path is not defined.`);
         }
         if (!this.tempDirPath) {
-            try {
-                fs.accessSync(this.r3transDirPath, fs.constants.W_OK);
-                this.tempDirPath = this.r3transDirPath;
-            } catch (err) {
-                throw new Error(`R3TRANS_HOME path doesn't have write access.`);
-            }
-        } else {
-            try {
-                fs.accessSync(this.tempDirPath, fs.constants.W_OK);
-            } catch (err) {
-                throw new Error(`Temporary file path doesn't have write access.`);
-            }
+            this.tempDirPath = this.r3transDirPath;
+        }
+        try {
+            fs.accessSync(this.tempDirPath, fs.constants.W_OK);
+        } catch (err) {
+            throw new Error(`Temporary file path (${this.tempDirPath}) doesn't have write access.`);
         }
     }
 
@@ -58,13 +52,16 @@ export class R3trans {
             exec(`R3trans ${args || ''}`, {
                 cwd: this.r3transDirPath
             }, (error, stdout, stderr) => {
+                if(error && error.code === 1){
+                    rej(new Error(`Couldn't start R3trans in directory "${this.r3transDirPath}".`));
+                }
                 const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
                 if (args) {
                     if (error && errorCodes.includes(error.code)) {
                         if (logFile) {
                             logFile.dispose();
                         }
-                        rej(error)
+                        rej(error);
                     }
                 }
                 res({
