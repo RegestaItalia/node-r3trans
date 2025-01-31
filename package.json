@@ -1,6 +1,6 @@
 {
   "name": "node-r3trans",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "NodeJs wrapper for SAP R3trans program",
   "keywords": [
     "sap",
@@ -12,7 +12,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "/dist"
+    "/dist",
+    "!dist/test.*"
   ],
   "homepage": "https://github.com/RegestaItalia/node-r3trans",
   "repository": {
@@ -20,7 +21,8 @@
     "url": "git+https://github.com/RegestaItalia/node-r3trans.git"
   },
   "scripts": {
-    "build": "tsc",
+    "cleanBuild": "rimraf dist/",
+    "build": "npm run cleanBuild && tsc --sourceMap false",
     "prepublishOnly": "npm run build"
   },
   "author": {
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.4.6",
-    "@types/uuid": "^9.0.2"
+    "@types/uuid": "^9.0.2",
+    "rimraf": "^6.0.1"
   }
 }
