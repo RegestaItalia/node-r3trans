@@ -21,7 +21,7 @@ export class R3trans {
             this.r3transDirPath = process.env.R3TRANS_HOME;
         }
         if (!this.r3transDirPath) {
-            throw new Error(`R3TRANS_HOME path is not defined.`);
+            throw new Error(`R3TRANS_HOME environment variable is not defined.`);
         }
         if (!this.tempDirPath) {
             this.tempDirPath = this.r3transDirPath;
@@ -29,7 +29,7 @@ export class R3trans {
         try {
             fs.accessSync(this.tempDirPath, fs.constants.W_OK);
         } catch (err) {
-            throw new Error(`Temporary file path (${this.tempDirPath}) doesn't have write access.`);
+            throw new Error(`Temporary folder path (${this.tempDirPath}) doesn't have write access.`);
         }
     }
 
@@ -52,23 +52,36 @@ export class R3trans {
             exec(`R3trans ${args || ''}`, {
                 cwd: this.r3transDirPath
             }, (error, stdout, stderr) => {
-                if(error && error.code === 1){
-                    rej(new Error(`Couldn't start R3trans in directory "${this.r3transDirPath}".`));
-                }
                 const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
-                if (args) {
-                    if (error && errorCodes.includes(error.code)) {
-                        if (logFile) {
-                            logFile.dispose();
+                if (error) {
+                    if (error.code === 1) { //program not started
+                        rej(new Error(`Couldn't start R3trans in directory "${this.r3transDirPath}".`));
+                    } else if (errorCodes.includes(error.code)) { //error code from r3trans program
+                        if (args) {
+                            if (logFile) {
+                                logFile.dispose();
+                            }
+                            rej(new Error(stdout || error.message));
+                        } else {
+                            //test running... not an error!
+                            res({
+                                code: error.code,
+                                output: stdout,
+                                logFile
+                            });
                         }
-                        rej(error);
+                    } else if (error.code !== 4) { //everything else except 4 (warning code)
+                        //unknown error
+                        //TODO: this can be handled better -> print stdout (it's cutting off right now)
+                        rej(new Error(`Couldn't execute R3trans command.\nThis error might be caused by missing ICU common library.`));
                     }
+                } else {
+                    res({
+                        code: 0,
+                        output: stdout,
+                        logFile
+                    });
                 }
-                res({
-                    code: error ? error.code : 0,
-                    output: stdout,
-                    logFile
-                });
             });
         });
     }
