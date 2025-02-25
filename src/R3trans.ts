@@ -55,6 +55,9 @@ export class R3trans {
                 const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
                 if (error) {
                     if (error.code === 1) { //program not started
+                        if (logFile) {
+                            logFile.dispose();
+                        }
                         rej(new Error(`Couldn't start R3trans in directory "${this.r3transDirPath}".`));
                     } else if (errorCodes.includes(error.code)) { //error code from r3trans program
                         if (args) {
@@ -73,7 +76,16 @@ export class R3trans {
                     } else if (error.code !== 4) { //everything else except 4 (warning code)
                         //unknown error
                         //TODO: this can be handled better -> print stdout (it's cutting off right now)
+                        if (logFile) {
+                            logFile.dispose();
+                        }
                         rej(new Error(`Couldn't execute R3trans command.\nThis error might be caused by missing ICU common library.`));
+                    } else {
+                        res({
+                            code: 4,
+                            output: stdout,
+                            logFile
+                        });
                     }
                 } else {
                     res({
