@@ -49,7 +49,7 @@ export class R3trans {
             }
         }
         return new Promise((res, rej) => {
-            exec(`R3trans ${args || ''}`, {
+            exec(`${process.platform === 'linux' ? './' : ''}R3trans ${args || ''}`, {
                 cwd: this.r3transDirPath
             }, (error, stdout, stderr) => {
                 const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
