@@ -6,10 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 import path from "path";
 import { R3transLogParser } from "./R3transLogParser";
 import { Structure } from "./Structure";
+import { R3transDockerOptions } from "./R3transDockerOptions";
 
 export class R3trans {
     public r3transDirPath: string;
     public tempDirPath: string;
+    public useDocker: boolean;
+    public dockerOptions: R3transDockerOptions;
     private _version: string;
     private _unicode: boolean;
 
@@ -17,14 +20,18 @@ export class R3trans {
         if (options) {
             this.r3transDirPath = options.r3transDirPath || process.env.R3TRANS_HOME;
             this.tempDirPath = options.tempDirPath;
+            this.useDocker = options.useDocker || false;
+            this.dockerOptions = options.dockerOptions || {
+                name: 'local/r3trans' //default
+            };
         } else {
             this.r3transDirPath = process.env.R3TRANS_HOME;
         }
-        if (!this.r3transDirPath) {
+        if (!this.r3transDirPath && !this.useDocker) {
             throw new Error(`R3TRANS_HOME environment variable is not defined.`);
         }
         if (!this.tempDirPath) {
-            this.tempDirPath = this.r3transDirPath;
+            this.tempDirPath = this.r3transDirPath || process.cwd();
         }
         try {
             fs.accessSync(this.tempDirPath, fs.constants.W_OK);
@@ -33,7 +40,11 @@ export class R3trans {
         }
     }
 
-    private _exec(args?: string, log?: boolean, verbose?: number): Promise<{
+    private _exec(args?: string, log?: boolean, verbose?: number, dockerMounts?: {
+        mount: string,
+        dir: string,
+        file: string
+    }[]): Promise<{
         output: string,
         logFile?: R3transFile,
         code: number
@@ -44,12 +55,27 @@ export class R3trans {
             const logFileName = `${uuidv4()}.log`;
             logFilePath = path.join(this.tempDirPath, logFileName);
             args = `${args} -w ${logFilePath}`;
+            dockerMounts.push({
+                mount: 'w',
+                dir: path.dirname(logFilePath),
+                file: path.basename(logFilePath)
+            });
             if (verbose) {
                 args = `${args} -v ${verbose}`;
             }
         }
         return new Promise((res, rej) => {
-            exec(`${process.platform === 'linux' ? './' : ''}R3trans ${args || ''}`, {
+            var r3transExec = `${process.platform !== "win32" ? './' : ''}R3trans`;
+            if (this.useDocker) {
+                r3transExec = `docker run --rm `;
+                (dockerMounts || []).forEach(o => {
+                    r3transExec += `-v "${o.dir}:${path.sep}${o.mount}" `;
+                    args = args.replace(new RegExp(`-${o.mount}\\s*${o.dir}${path.sep}${o.file}`, 'gmi'), `-${o.mount} ${path.sep}${o.mount}${path.sep}${o.file}`);
+                });
+                r3transExec += ` ${this.dockerOptions.name}`;
+            }
+            const fullCommand = `${r3transExec} ${args || ''}`.trim();
+            exec(fullCommand, {
                 cwd: this.r3transDirPath
             }, (error, stdout, stderr) => {
                 const logFile = logFilePath ? new R3transFile(logFilePath, true) : null;
@@ -147,7 +173,11 @@ export class R3trans {
         var valid: boolean = false;
         const transport = this._getTransportFile(data);
         try {
-            const oExec = await this._exec(`-l ${transport.filePath}`, true);
+            const oExec = await this._exec(`-l ${transport.filePath}`, true, undefined, [{
+                mount: 'l',
+                dir: path.dirname(transport.filePath),
+                file: path.basename(transport.filePath)
+            }]);
             oExec.logFile.dispose();
             valid = true;
         } catch (e) {
@@ -162,7 +192,11 @@ export class R3trans {
         var buffer: Buffer;
         const transport = this._getTransportFile(data);
         try {
-            const oExec = await this._exec(`-l ${transport.filePath}`, true, verbose);
+            const oExec = await this._exec(`-l ${transport.filePath}`, true, verbose, [{
+                mount: 'l',
+                dir: path.dirname(transport.filePath),
+                file: path.basename(transport.filePath)
+            }]);
             buffer = oExec.logFile.getBuffer();
             oExec.logFile.dispose();
         } catch (e) {
@@ -177,7 +211,11 @@ export class R3trans {
         var tableStructure;
         const transport = this._getTransportFile(data);
         try {
-            const oExec = await this._exec(`-l ${transport.filePath}`, true, 4);
+            const oExec = await this._exec(`-l ${transport.filePath}`, true, 4, [{
+                mount: 'l',
+                dir: path.dirname(transport.filePath),
+                file: path.basename(transport.filePath)
+            }]);
             const parser = new R3transLogParser(oExec.logFile.filePath, await this.isUnicode());
             tableStructure = await parser.getTableStructure(tableName);
             oExec.logFile.dispose();
@@ -193,7 +231,11 @@ export class R3trans {
         var tableEntries;
         const transport = this._getTransportFile(data);
         try {
-            const oExec = await this._exec(`-l ${transport.filePath}`, true, 4);
+            const oExec = await this._exec(`-l ${transport.filePath}`, true, 4, [{
+                mount: 'l',
+                dir: path.dirname(transport.filePath),
+                file: path.basename(transport.filePath)
+            }]);
             const parser = new R3transLogParser(oExec.logFile.filePath, await this.isUnicode());
             tableEntries = await parser.getTableEntries(tableName);
             oExec.logFile.dispose();
