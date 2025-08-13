@@ -13,6 +13,57 @@ NodeJs wrapper for [SAP R3trans](https://help.sap.com/docs/SOFTWARE_LOGISTICS_TO
 ```shell
 npm install node-r3trans
 ```
+
+## Docker support
+For operating systems (e.g. MacOS) that don't support R3trans, support for dockerized R3trans program is now available (since version 2.0.0).
+
+### Docker Image build
+- Download the R3trans program from [SAP Software Download Center](https://support.sap.com/en/my-support/software-downloads.html)
+- Create a directory and extract its content in a folder named "r3trans"
+- Create a Dockerfile inside the root folder (you should now have Dockerfile and the r3trans folder created earlier)
+- Paste this inside the Dockerfile
+```dockerfile
+FROM --platform=linux/amd64 debian:bookworm-slim AS collector
+
+COPY r3trans /r3trans
+RUN chmod +x /r3trans/R3trans
+
+RUN set -eux; \
+    mkdir -p /deps; \
+    echo "Deps for R3trans:"; ldd /r3trans/R3trans; \
+    ldd /r3trans/R3trans \
+      | awk '($2 == "=>") {print $3} ($1 ~ /^\//) {print $1}' \
+      | sort -u \
+      | xargs -I '{}' cp -v --parents '{}' /deps
+
+FROM --platform=linux/amd64 gcr.io/distroless/base-debian12
+
+COPY --from=collector /r3trans /r3trans
+COPY --from=collector /deps/ /
+
+ENV LD_LIBRARY_PATH=/r3trans:/usr/lib/x86_64-linux-gnu:/lib/x86_64-linux-gnu
+
+ENTRYPOINT ["/r3trans/R3trans"]
+```
+- Go in the root folder and run this command to build the docker image
+```shell
+docker buildx build --platform=linux/amd64 -t local/r3trans:latest .
+```
+
+### Usage with dockerized R3trans
+Make sure to flag the docker usage in the R3trans constructor:
+```javascript
+import { R3trans } from "node-r3trans";
+const r3trans = new R3trans({
+    useDocker: true
+});
+r3trans.getVersion().then(version => {
+    console.log(version);
+}).catch(err => {
+    console.error(err);
+});
+```
+
 ## Getting started
 
 Start by testing if the R3trans program is installed correctly and print out its version.
