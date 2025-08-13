@@ -1,6 +1,6 @@
 {
   "name": "node-r3trans",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "description": "NodeJs wrapper for SAP R3trans program",
   "keywords": [
     "sap",
@@ -34,7 +34,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.4.6",
+    "@types/node": "^22.17.1",
+    "@types/shell-quote": "^1.7.5",
     "@types/uuid": "^9.0.2",
     "rimraf": "^6.0.1"
   }
