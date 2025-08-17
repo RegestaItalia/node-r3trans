@@ -8,7 +8,11 @@ export class R3transFile {
 
     public dispose() {
         if(this._canDispose){
-            fs.unlinkSync(this.filePath);
+            try{
+                fs.unlinkSync(this.filePath);
+            }catch(e){
+                throw new Error(`Couldn't dispose file "${this.filePath}"`);
+            }
         }
     }
 

@@ -21,9 +21,8 @@ export class R3trans {
             this.r3transDirPath = options.r3transDirPath || process.env.R3TRANS_HOME;
             this.tempDirPath = options.tempDirPath;
             this.useDocker = options.useDocker || false;
-            this.dockerOptions = options.dockerOptions || {
-                name: 'local/r3trans' //default
-            };
+            this.dockerOptions = options.dockerOptions || { name: undefined };
+            this.dockerOptions.name = this.dockerOptions.name || 'local/r3trans';
         } else {
             this.r3transDirPath = process.env.R3TRANS_HOME;
         }
@@ -105,7 +104,11 @@ export class R3trans {
                         if (logFile) {
                             logFile.dispose();
                         }
-                        rej(new Error(`Couldn't execute R3trans command.\nThis error might be caused by missing ICU common library.`));
+                        if(!this.useDocker){
+                            rej(new Error(`Couldn't execute R3trans command.\nThis error might be caused by missing ICU common library.`));
+                        }else{
+                            rej(new Error(`Couldn't execute R3trans command.\nThis error might be caused by Docker not running or broken "${this.dockerOptions.name}" image.`));
+                        }
                     } else {
                         res({
                             code: 4,
