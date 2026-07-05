@@ -2,7 +2,7 @@ import { R3transOptions } from "./R3transOptions";
 import * as fs from "fs";
 import { R3transFile } from "./R3transFile";
 import { exec } from "child_process";
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from "crypto";
 import path from "path";
 import { R3transLogParser } from "./R3transLogParser";
 import { Structure } from "./Structure";
@@ -51,7 +51,7 @@ export class R3trans {
         var logFilePath;
         const errorCodes = [8, 12, 16];
         if (log) {
-            const logFileName = `${uuidv4()}.log`;
+            const logFileName = `${randomUUID()}.log`;
             logFilePath = path.join(this.tempDirPath, logFileName);
             args = `${args} -w ${logFilePath}`;
             dockerMounts.push({
