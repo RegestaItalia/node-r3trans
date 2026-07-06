@@ -1,6 +1,6 @@
 {
   "name": "node-r3trans",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "NodeJs wrapper for SAP R3trans program",
   "keywords": [
     "sap",
@@ -30,13 +30,9 @@
     "email": "simone.gaffurini@regestaitalia.it"
   },
   "license": "MIT",
-  "dependencies": {
-    "uuid": "^14.0.0"
-  },
   "devDependencies": {
-    "@types/node": "^22.19.17",
+    "@types/node": "^22.20.0",
     "@types/shell-quote": "^1.7.5",
-    "@types/uuid": "^9.0.2",
     "rimraf": "^6.0.1"
   }
 }
